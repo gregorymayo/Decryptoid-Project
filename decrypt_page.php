@@ -20,29 +20,11 @@ _END;
     require_once 'regular_function.php';
     require_once 'simpleSub_key.php';
     require_once 'rc4_key.php';
-    
+    //Create A Connection With Database
 	global $conn;
 	$conn = new mysqli($hn, $un, $pw, $db);
 	if ($conn->connect_errno) 
         echo "<br>The Connection Is Error<br>";
-        
-    function checkTextLetter($input){
-        $length = strlen($input);
-        $check = true;
-		for($count = 0; $count < $length; $count++ ){
-            if( $input[$count] == 'a' || $input[$count] == 'b' || $input[$count] == 'c' || $input[$count] == 'd' || $input[$count] == 'e' || $input[$count] == 'f' || $input[$count] == 'g' || $input[$count] == 'h' || $input[$count] =='i' || $input[$count] == 'j'||
-                $input[$count] == 'k' || $input[$count] == 'l' || $input[$count] == 'm' || $input[$count] == 'n' || $input[$count] == 'o' || $input[$count] == 'p' || $input[$count] == 'q' || $input[$count] == 'r' || $input[$count] =='s' || $input[$count] == 't' ||
-                $input[$count] == 'u' || $input[$count] == 'v' || $input[$count] == 'w' || $input[$count] == 'x' || $input[$count] == 'y' || $input[$count] == 'z'|| $input[$count] == ' ')
-				$check =  true;
-			else
-				return false;
-		}
-		if($check)
-			return true;
-		else
-			return false;
-    }
-
     //Upload Button
     if(isset($_POST['uploadButton'])){
         $check = false;
@@ -50,7 +32,6 @@ _END;
         $inputText = $_POST['textDecrypt'];
         $fileUpload = $_POST['content'];
         $isAFile = false;
-        
         if($inputText!="" &&!file_exists($fileUpload)){
             //Sanitizing the inputs
             $content = sanitize($conn, $inputText);
@@ -70,6 +51,7 @@ _END;
                     $content = fread($fileOutput , filesize($fileUpload));
                     //Sanitizing the inputs
                     $content = sanitize($conn, $content);
+                    //For Requirements
                     $check = true;
                     $isAFile = true;
                 }  else {

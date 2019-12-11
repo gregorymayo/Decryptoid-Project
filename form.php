@@ -8,12 +8,10 @@ _END;
 
 	require_once 'login.php';
 	require_once 'regular_function.php';
-
 	global $conn;
 	$conn = new mysqli($hn, $un, $pw, $db);
 	if ($conn->connect_errno) 
 		echo "<br>The Connection Is Error<br>";
-
 	//clear the connection
 	mysqli_close($conn);
 ?>
