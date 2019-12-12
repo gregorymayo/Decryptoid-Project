@@ -15,12 +15,12 @@ echo <<<_END
     </form>
     <button onclick="window.location.href='form.php'">Back To Main Page</button>
 _END;
-
     require_once 'login.php';
     require_once 'regular_function.php';
-    require_once 'simpleSub_key.php';
+    require_once 'simplesub_key.php';
     require_once 'rc4_key.php';
-    //Create A Connection With Database
+    require_once 'des_function.php';
+    require_once 'des_key.php';
 	global $conn;
 	$conn = new mysqli($hn, $un, $pw, $db);
 	if ($conn->connect_errno) 
@@ -51,7 +51,6 @@ _END;
                     $content = fread($fileOutput , filesize($fileUpload));
                     //Sanitizing the inputs
                     $content = sanitize($conn, $content);
-                    //For Requirements
                     $check = true;
                     $isAFile = true;
                 }  else {
@@ -79,7 +78,10 @@ _END;
                 $finalText = decryptionrc4($content);
             }else if($inputCipher == "desCip"){
                 echo "<br><br>Using A DES Cipher:";
-                $finalText = decryptionDES($content);
+                if(checkDESLetter($content))
+                    $finalText = decryptionDES($content);
+                else
+                    echo "<br><br>Try Again!";
             }
             $sql = "INSERT INTO input_table (text_input, cipher, timestamp) VALUES (NULL, '$inputCipher', '$timestamp')";
             mysqli_query($conn,$sql);
@@ -89,7 +91,6 @@ _END;
             mysqli_close($conn);
         }
     }
-
     //decryption for simple substitution
     function decryptionSimpleSubstitution($input){
         $input = strtolower($input);
@@ -106,7 +107,6 @@ _END;
         echo "<br><br>$cipherText";
         return $cipherText;
     }
-
     //encryption for Double Transposition
     function decryptionDoubleTransposition($input){
         $outputFinal = "";
@@ -122,7 +122,6 @@ _END;
         echo "<br><br>$outputFinal";
         return $outputFinal;
     }
-
     //encryption for RC4
     function decryptionrc4($input){
         $input = hex2bin($input);
@@ -152,16 +151,40 @@ _END;
             $x = $s[$i];
             $s[$i] = $s[$j];
             $s[$j] = $x;
-
             $outputTempt .= $input[$y] ^ chr($s[($s[$i] + $s[$j]) % 256]);
         }
         echo "<br><br>$outputTempt";
         return $outputTempt;
     }
-
     //encryption for Double Transposition
     function decryptionDES($input){
-        
+        $key= getKeyDES(); 
+        $key= hex2binn($key); 
+        //Using A Permutation, we can get 56 bit key
+        $key= permute($key, getArrayParity(), 56);
+        //Splitting 
+        $left = substr($key, 0, 28);
+        //echo "<br> $left";
+        $right = substr($key, 28, 28);
+        //echo "<br> $right";
+        $inputrkb = array();
+        $inputrk = array();
+        for($i=0;$i<16;$i++){
+            //Shifting 
+            $left= shiftLeft($left, getShiftTable($i)); 
+            $right= shiftLeft($right, getShiftTable($i)); 
+            //Combining 
+            $combine = "";
+            $combine .= $left;
+            $combine .= $right;
+            //Key Compression 
+            $RoundKey= permute($combine, getKeyComp(), 48); 
+            array_push($inputrkb,$RoundKey); 
+            array_push($inputrk,bin2hexx($RoundKey));
+        }
+        $finalOut = decrypt($input,$inputrkb,$inputrk);
+        echo "<br><br>$finalOut";
+        return $finalOut;
     }
     
 ?>

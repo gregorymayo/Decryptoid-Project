@@ -16,10 +16,11 @@ echo <<<_END
 _END;
     require_once 'login.php';
     require_once 'regular_function.php';
-    require_once 'simpleSub_key.php';
+    require_once 'simplesub_key.php';
     require_once 'rc4_key.php';
-    require_once 'rc4_function.php';
-    //Create A Connection With Database
+    require_once 'des_function.php';
+    require_once 'des_key.php';
+    //Build The Connection
 	global $conn;
 	$conn = new mysqli($hn, $un, $pw, $db);
 	if ($conn->connect_errno) 
@@ -50,7 +51,6 @@ _END;
                     $content = fread($fileOutput , filesize($fileUpload));
                     //Sanitizing the inputs
                     $content = sanitize($conn, $content);
-                    //For Requirement
                     $check = true;
                     $isAFile = true;
                 }  else {
@@ -60,9 +60,11 @@ _END;
         } else {
             echo "<br><br>You Need To Follow The Requirements<br>";
         }
+        //If All The Requirements Complete
         if($check){
             $finalText = "";
             $timestamp = date("Y-m-d H:i:s");
+            //For Simple Subtitution
             if($inputCipher == "simpleSub"){
                 echo "<br><br>Using A Simple Subtitution Cipher:";
                 if(checkTextLetter($content))
@@ -70,16 +72,25 @@ _END;
                 else
                     echo "<br><br>Your Text Should Only Lower Case Letter And Space<br>";
             }
+            //For Double Transpotition
             else if($inputCipher == "doubleTra"){
                 echo "<br><br>Using A Double Transposition Cipher:";
                 $finalText = encryptionDoubleTransposition($content);
-            } else if($inputCipher == "rc4"){
+            } 
+            //For RC4
+            else if($inputCipher == "rc4"){
                 echo "<br><br>Using A RC4 Cipher:";
                 $finalText = encryptionrc4($content);
-            }else if($inputCipher == "desCip"){
-                echo "<br><br>Using A DES Cipher:";
-                $finalText = encryptionDES($content);
             }
+            //For DES 
+            else if($inputCipher == "desCip"){
+                echo "<br><br>Using A DES Cipher:";
+                if(checkDESLetter($content))
+                    $finalText = encryptionDES($content);
+                else
+                    echo "<br><br>Try Again!";
+            }
+            //Guest User, only put the cipher and the timestamp to the database
             $sql = "INSERT INTO input_table (text_input, cipher, timestamp) VALUES (NULL, '$inputCipher', '$timestamp')";
 			mysqli_query($conn,$sql);
             if($isAFile)
@@ -88,7 +99,6 @@ _END;
             mysqli_close($conn);
         }
     }
-
     //encryption for simple substitution
     function encryptionSimpleSubstitution($input){
         $input = strtolower($input);
@@ -105,7 +115,6 @@ _END;
         echo "<br><br>$cipherText";
         return $cipherText;
     }
-
     //encryption for Double Transposition
     function encryptionDoubleTransposition($input){
         $outputFinal = "";
@@ -121,7 +130,6 @@ _END;
         echo "<br><br>$outputFinal";
         return $outputFinal;
     }
-
     //encryption for RC4
     function encryptionrc4($input){
         $lengthInput = strlen($input);
@@ -157,48 +165,12 @@ _END;
         echo "<br><br>$outputFinal";
         return $outputFinal;
     }
-
     //encryption for Double Transposition
     function encryptionDES($input){
-        
-        $pt= "123456ABCD132536"; 
-        $key= "AABB09182736CCDD"; 
-        //Hex to binary 
+        $key= getKeyDES(); 
         $key= hex2binn($key); 
-        //Parity bit drop table 
-        $keyp = array (  
-            57,49,41,33,25,17,9, 
-            1,58,50,42,34,26,18, 
-            10,2,59,51,43,35,27, 
-            19,11,3,60,52,44,36,           
-            63,55,47,39,31,23,15, 
-            7,62,54,46,38,30,22, 
-            14,6,61,53,45,37,29, 
-            21,13,5,28,20,12,4 
-        );
-        //getting 56 bit key from 64 bit using the parity bits 
-        $key= permute($key, $keyp, 56);
-        // echo strlen($key);
-        //echo $key;
-        
-        //Number of bit shifts  
-        $shift_table  = array(
-            1, 1, 2, 2, 
-            2, 2, 2, 2,  
-            1, 2, 2, 2,  
-            2, 2, 2, 1 
-        );  
-        //Key- Compression Table 
-        $key_comp  = array( 
-            14,17,11,24,1,5, 
-            3,28,15,6,21,10, 
-            23,19,12,4,26,8, 
-            16,7,27,20,13,2, 
-            41,52,31,37,47,55, 
-            30,40,51,45,33,48, 
-            44,49,39,56,34,53, 
-            46,42,50,36,29,32 
-        );
+        //Using A Permutation, we can get 56 bit key
+        $key= permute($key, getArrayParity(), 56);
         //Splitting 
         $left = substr($key, 0, 28);
         //echo "<br> $left";
@@ -206,36 +178,23 @@ _END;
         //echo "<br> $right";
         $inputrkb = array();
         $inputrk = array();
-        
         for($i=0;$i<16;$i++){
             //Shifting 
-            $left= shiftLeft($left, $shift_table[$i]); 
-            $right= shiftLeft($right, $shift_table[$i]); 
-            
+            $left= shiftLeft($left, getShiftTable($i)); 
+            $right= shiftLeft($right, getShiftTable($i)); 
             //Combining 
             $combine = "";
             $combine .= $left;
             $combine .= $right;
-            //echo "<br> $combine";
             //Key Compression 
-            $RoundKey= permute($combine, $key_comp, 48); 
-            //echo "<br> $RoundKey";
-            // $inputrkb.push_back($RoundKey); 
-            // $inputrk.push_back(bin2hex($RoundKey));
+            $RoundKey= permute($combine, getKeyComp(), 48); 
             array_push($inputrkb,$RoundKey); 
             array_push($inputrk,bin2hexx($RoundKey));
-            //echo "<br> $inputrkb[$i] $i susu";
-            //echo "<br> $inputrk[$i] $i kuda";
         }
-        //print_r($inputrkb);
-        //print_r($inputrk);
         
-        $finalOut = encrypt($pt,$inputrkb,$inputrk);
-
+        $finalOut = encrypt($input,$inputrkb,$inputrk);
         echo "<br><br>$finalOut";
-        /*
         return $finalOut;
-        */
     }
     
 ?>
