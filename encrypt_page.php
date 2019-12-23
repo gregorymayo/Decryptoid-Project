@@ -1,3 +1,9 @@
+<!-- 
+	Project Name: Decryptoid
+	Student Name: 
+		Gregory Mayo, 013422357
+		Kevin Prakasa, 012255087
+ -->
 <?php
 echo <<<_END
     <h2>WELCOME TO THE ENCRYPT PAGE</h2>
@@ -10,10 +16,12 @@ echo <<<_END
         <label>Fill The Text Or The File To Encrypt (Cannoth Both)<br><br></label>
 		Text To Encrypt: <input type="text" name="textEncrypt"><br><br>
         File To Encrypt: <input type="file" name="content"><br><br>
-        <button name="uploadButton">Encrypt</button><br><br>
+        <button name="uploadButton">ENCRYPT</button><br>
     </form>
-    <button onclick="window.location.href='form.php'">Back To Main Page</button>
+    <button onclick="window.location.href='userpage.php'">BACK</button> <br>
+
 _END;
+    //Encrypt Page    
     require_once 'login.php';
     require_once 'regular_function.php';
     require_once 'simplesub_key.php';
@@ -21,10 +29,15 @@ _END;
     require_once 'des_function.php';
     require_once 'des_key.php';
     //Build The Connection
-	global $conn;
+    global $conn;
+    session_start();
 	$conn = new mysqli($hn, $un, $pw, $db);
 	if ($conn->connect_errno) 
         echo "<br>The Connection Is Error<br>";
+    // Logout for user
+    if (isset($_SESSION['username'])) {
+        echo "<br> <button type=\"button\" onclick=\"window.location.href='logoutPage.php'\">LOGOUT</button>";
+    }
     //Upload Button
     if(isset($_POST['uploadButton'])){
         $check = false;
@@ -58,13 +71,13 @@ _END;
                 }
             }
         } else {
-            echo "<br><br>You Need To Follow The Requirements<br>";
+            echo "<br><br>Input is empty or requirements are not met<br>";
         }
-        //If All The Requirements Complete
+        //All The Requirements Complete
         if($check){
             $finalText = "";
             $timestamp = date("Y-m-d H:i:s");
-            //For Simple Subtitution
+            //If For calling Simple Substitution
             if($inputCipher == "simpleSub"){
                 echo "<br><br>Using A Simple Subtitution Cipher:";
                 if(checkTextLetter($content))
@@ -72,17 +85,17 @@ _END;
                 else
                     echo "<br><br>Your Text Should Only Lower Case Letter And Space<br>";
             }
-            //For Double Transpotition
+            //If For Calling Double Transpotition
             else if($inputCipher == "doubleTra"){
                 echo "<br><br>Using A Double Transposition Cipher:";
                 $finalText = encryptionDoubleTransposition($content);
             } 
-            //For RC4
+            //If For Calling RC4
             else if($inputCipher == "rc4"){
                 echo "<br><br>Using A RC4 Cipher:";
                 $finalText = encryptionrc4($content);
             }
-            //For DES 
+            //If For Calling DES 
             else if($inputCipher == "desCip"){
                 echo "<br><br>Using A DES Cipher:";
                 if(checkDESLetter($content))
@@ -90,9 +103,14 @@ _END;
                 else
                     echo "<br><br>Try Again!";
             }
-            //Guest User, only put the cipher and the timestamp to the database
-            $sql = "INSERT INTO input_table (text_input, cipher, timestamp) VALUES (NULL, '$inputCipher', '$timestamp')";
-			mysqli_query($conn,$sql);
+            //Statement for put the cipher and the timestamp to the database
+            if (isset($_SESSION['username'])) {
+                $sql = "INSERT INTO input_table (text_input, cipher, timestamp) VALUES ('$content', '$inputCipher', '$timestamp')";
+                mysqli_query($conn,$sql);
+            } else {
+                $sql = "INSERT INTO input_table (text_input, cipher, timestamp) VALUES (NULL, '$inputCipher', '$timestamp')";
+                mysqli_query($conn,$sql);
+            }
             if($isAFile)
                 fclose($fileOutput);
             //clear the connection
@@ -108,9 +126,9 @@ _END;
             $key = ord($input[$i]) - 96;
             if($key < 0){
                 $key = 0;
-                $cipherText .= getKey($key);
+                $cipherText .= getKey($key); //Calling from simplesub_key.php
             } else 
-            $cipherText .= getKey($key);
+            $cipherText .= getKey($key); //Calling from simplesub_key.php
         }
         echo "<br><br>$cipherText";
         return $cipherText;
@@ -133,7 +151,7 @@ _END;
     //encryption for RC4
     function encryptionrc4($input){
         $lengthInput = strlen($input);
-        $key = getKeyRC4();
+        $key = getKeyRC4(); //Calling from rc4_key.php
         $lengthKey = strlen($key);
         $s = array();
         for ($i = 0; $i < 256; $i++) {
@@ -158,7 +176,6 @@ _END;
             $x = $s[$i];
             $s[$i] = $s[$j];
             $s[$j] = $x;
-
             $outputTempt .= $input[$y] ^ chr($s[($s[$i] + $s[$j]) % 256]);
         }
         $outputFinal = bin2hex($outputTempt);
@@ -166,6 +183,7 @@ _END;
         return $outputFinal;
     }
     //encryption for Double Transposition
+    //Calling from des_key.php
     function encryptionDES($input){
         $key= getKeyDES(); 
         $key= hex2binn($key); 
@@ -191,10 +209,9 @@ _END;
             array_push($inputrkb,$RoundKey); 
             array_push($inputrk,bin2hexx($RoundKey));
         }
-        
         $finalOut = encrypt($input,$inputrkb,$inputrk);
         echo "<br><br>$finalOut";
         return $finalOut;
     }
-    
+
 ?>

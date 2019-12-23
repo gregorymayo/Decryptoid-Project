@@ -1,3 +1,9 @@
+<!-- 
+	Project Name: Decryptoid
+	Student Name: 
+		Gregory Mayo, 013422357
+		Kevin Prakasa, 012255087
+ -->
 <?php
     require_once 'regular_function.php';
     require_once 'des_key.php';
@@ -35,40 +41,53 @@
         $input = permute($input,getInitialPermutation(), 64);
         $left = substr($input, 0, 32);
         $right = substr($input, 32, 32);
-        for($i=0;$i<16;$i++){
+        $i = 0;
+        $keyPermutation = 6;
+        while($i<16){
             $right_expand = permute($right, getComp1(), 48);
             $x = func_xor($inputrkb[$i],$right_expand);
             $op = "";
-            for($j=0;$j<8;$j++){
-                $row= 2*intval($x[$j*6])+ intval($x[$j*6 +5]); 
-                $col= 8*intval($x[$j*6+1])+ 4*intval($x[$j*6+2])+ 2*intval($x[$j*6+3])+ intval($x[$j*6+4]); 
+            $j = 0;
+            $times=8;
+            while($j<$times){
+                $addNum = 0;
+                $row= ($times/4)*intval($x[$j*$keyPermutation+$addNum]); 
+                $addNum++;
+                $col= ($times/1)*intval($x[$j*$keyPermutation+$addNum]);
+                $addNum++;
+                $col+= ($times/2)*intval($x[$j*$keyPermutation+$addNum]);
+                $addNum++;
+                $col+= ($times/4)*intval($x[$j*$keyPermutation+$addNum]);
+                $addNum++;
+                $col+= ($times/8)*intval($x[$j*$keyPermutation+$addNum]); 
+                $addNum++;
+                $row += intval($x[$j*$keyPermutation+$addNum]);
                 $val = getComp2($j,$row,$col); 
-                $a = $val/8;
+                $a = $val/($times/1);
                 $a = intval($a);
                 $op .= (string)$a; 
-                $val= $val%8; 
-                $b = $val/4;
+                $val= $val%($times/1); 
+                $b = $val/($times/2);
                 $b = intval($b);
                 $op .= (string)$b;
-                $val= $val%4; 
-                $c = $val/2;
+                $val= $val%($times/2); 
+                $c = $val/($times/4);
                 $c = intval($c);
                 $op .= (string)$c;
-                $val= $val%2; 
+                $val= $val%($times/4); 
                 $d = intval($val);
                 $op .= (string)$val; 
+                $j++;
             } 
-            //Straight D-box 
-            //$op = permute($op, $per, 32); 
-            //XOR left and op 
             $x = func_xor($op, $left); 
             $left = $x;
-             //Swapper 
+             //Swap
             if($i!= 15){ 
                 $temp = $left;
                 $left = $right;
                 $right = $temp;
             } 
+            $i++;
         }
         $combine = "";
         $combine .= $left;
@@ -83,32 +102,44 @@
         $input = permute($input,getInitialPermutation(), 64);
         $left = substr($input, 0, 32);
         $right = substr($input, 32, 32);
-        for($i=0;$i<16;$i++){
+        $i=0;
+        $keyPermutation = 6;
+        while($i<16){
             $right_expand = permute($right, getComp1(), 48);
             $x = func_xor($inputrkb[$i],$right_expand);
             $op = "";
-            for($j=0;$j<8;$j++){
-                $row= 2*intval($x[$j*6])+ intval($x[$j*6+5]); 
-                $col= 8*intval($x[$j*6+1])+ 4*intval($x[$j*6+2])+ 2*intval($x[$j*6+3])+ intval($x[$j*6+4]); 
+            $j=0;
+            $times=8;
+            while($j<$times){
+                $addNum = 0;
+                $row= ($times/4)*intval($x[$j*$keyPermutation+$addNum]);
+                $addNum++;
+                $col= ($times/1)*intval($x[$j*$keyPermutation+$addNum]);
+                $addNum++;
+                $col += ($times/2)*intval($x[$j*$keyPermutation+$addNum]);
+                $addNum++;
+                $col += ($times/4)*intval($x[$j*$keyPermutation+$addNum]);
+                $addNum++;
+                $col += ($times/8)*intval($x[$j*$keyPermutation+$addNum]); 
+                $addNum++;
+                $row += intval($x[$j*$keyPermutation+$addNum]); 
                 $val= getComp2($j,$row,$col); 
-                $a = $val/8;
+                $a = $val/($times/1);
                 $a = intval($a);
                 $op .= (string)$a; 
-                $val= $val%8; 
-                $b = $val/4;
+                $val= $val%($times/1); 
+                $b = $val/($times/2);
                 $b = intval($b);
                 $op .= (string)$b;
-                $val= $val%4; 
-                $c = $val/2;
+                $val= $val%($times/2); 
+                $c = $val/($times/4);
                 $c = intval($c);
                 $op .= (string)$c;
-                $val= $val%2; 
+                $val= $val%($times/4); 
                 $d = intval($val);
                 $op .= (string)$val; 
+                $j++;
             } 
-            //Straight D-box 
-            //$op = permute($op, $per, 32); 
-            //XOR left and op 
             $x = func_xor($op, $left); 
             $left = $x;
              //Swapper 
@@ -116,7 +147,8 @@
                 $temp = $left;
                 $left = $right;
                 $right = $temp;
-            } 
+            }
+            $i++; 
         }
         $combine = "";
         $combine .= $left;

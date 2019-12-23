@@ -1,4 +1,10 @@
-<?php
+<!-- 
+	Project Name: Decryptoid
+	Student Name: 
+		Gregory Mayo, 013422357
+		Kevin Prakasa, 012255087
+ -->
+ <?php
     function getKey($input){
         $keyCipher = array(' ','z','h','q','e',
                         'y','f','i','g',

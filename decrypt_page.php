@@ -1,3 +1,9 @@
+<!-- 
+	Project Name: Decryptoid
+	Student Name: 
+		Gregory Mayo, 013422357
+		Kevin Prakasa, 012255087
+ -->
 <?php
 echo <<<_END
     <h2>WELCOME TO THE DECRYPT PAGE</h2>
@@ -11,21 +17,29 @@ echo <<<_END
         <label>Fill The Text Or The File To Decrypt (Cannoth Both)<br><br></label>
 		Text To Decrypt: <input type="text" name="textDecrypt"><br><br>
         File To Decrypt: <input type="file" name="content"><br><br>
-        <button name="uploadButton">Decrypt</button><br><br>
+        <button name="uploadButton">DECRYPT</button><br>
     </form>
-    <button onclick="window.location.href='form.php'">Back To Main Page</button>
+    <button onclick="window.location.href='userpage.php'">BACK</button> <br>
+
 _END;
+    // Decrypt Page
     require_once 'login.php';
     require_once 'regular_function.php';
     require_once 'simplesub_key.php';
     require_once 'rc4_key.php';
     require_once 'des_function.php';
     require_once 'des_key.php';
-	global $conn;
+    global $conn;
+    session_start();
 	$conn = new mysqli($hn, $un, $pw, $db);
 	if ($conn->connect_errno) 
         echo "<br>The Connection Is Error<br>";
+    // Logout for user
+    if (isset($_SESSION['username'])) {
+        echo "<br> <button type=\"button\" onclick=\"window.location.href='logoutPage.php'\">LOGOUT</button>";
+    }
     //Upload Button
+
     if(isset($_POST['uploadButton'])){
         $check = false;
         $inputCipher = $_POST['cipher'];
@@ -58,7 +72,7 @@ _END;
                 }
             }
         } else {
-            echo "<br><br>You Need To Follow The Requirements<br>";
+            echo "<br><br>Input is empty or requirements are not met<br>";
         }
         if($check){
             $finalText = "";
@@ -83,8 +97,14 @@ _END;
                 else
                     echo "<br><br>Try Again!";
             }
-            $sql = "INSERT INTO input_table (text_input, cipher, timestamp) VALUES (NULL, '$inputCipher', '$timestamp')";
-            mysqli_query($conn,$sql);
+
+            if (isset($_SESSION['username'])) {
+                $sql = "INSERT INTO input_table (text_input, cipher, timestamp) VALUES ('$content', '$inputCipher', '$timestamp')";
+                mysqli_query($conn,$sql);
+            } else {
+                $sql = "INSERT INTO input_table (text_input, cipher, timestamp) VALUES (NULL, '$inputCipher', '$timestamp')";
+                mysqli_query($conn,$sql);
+            }
             if($isAFile)
                 fclose($fileOutput);
             //clear the connection
@@ -186,5 +206,4 @@ _END;
         echo "<br><br>$finalOut";
         return $finalOut;
     }
-    
 ?>

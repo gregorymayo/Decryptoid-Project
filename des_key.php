@@ -1,6 +1,12 @@
+<!-- 
+	Project Name: Decryptoid
+	Student Name: 
+		Gregory Mayo, 013422357
+		Kevin Prakasa, 012255087
+ -->
 <?php
     function getKeyDES(){
-        $keyDES = "AABB09182736CCDD";
+        $keyDES = "ABD123CCE485CFDA";
         return $keyDES;
     }
     function getShiftTable($input){

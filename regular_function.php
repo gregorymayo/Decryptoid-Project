@@ -1,4 +1,10 @@
-<?php
+<!-- 
+	Project Name: Decryptoid
+	Student Name: 
+		Gregory Mayo, 013422357
+		Kevin Prakasa, 012255087
+ -->
+ <?php
 	//For sanitizing the input from the user
 	function sanitize($connection, $var){
 		$var = $connection->real_escape_string($var);
@@ -13,20 +19,22 @@
                 $input[$count] == 'k' || $input[$count] == 'l' || $input[$count] == 'm' || $input[$count] == 'n' || $input[$count] == 'o' || $input[$count] == 'p' || $input[$count] == 'q' || $input[$count] == 'r' || $input[$count] =='s' || $input[$count] == 't' ||
                 $input[$count] == 'u' || $input[$count] == 'v' || $input[$count] == 'w' || $input[$count] == 'x' || $input[$count] == 'y' || $input[$count] == 'z'|| $input[$count] == ' ')
 				$check =  true;
-			else
-				return false;
+            else
+                die(" Failed Input");
 		}
 		if($check)
 			return true;
 		else
-			return false;
+        die(" Failed Input");
 	}
 	//For check the text for DES cipher
     function checkDESLetter($input){
 		$length = strlen($input);
 		if($length!=16){
-			echo "<br>The Text Should Contains Of 16 Characters";
-			return false;
+			echo "<br>The Text Should Contains Of 16 Characters And Upper Case";
+            echo "<br>The Text Should Contains Numbers And Characters (A/B/C/D/E/F) Only";
+            echo "<br>Example: ABBBC12345AAAAAB";
+			die("");
 		}
         $check = true;
 		for($count = 0; $count < $length; $count++ ){
@@ -34,16 +42,16 @@
                 $input[$count] == '4' || $input[$count] == '5' || $input[$count] == '6' || $input[$count] == '7' || $input[$count] == '8' || $input[$count] == '9')
 				$check =  true;
 			else {
-				echo "<br>The Text Should Contains Numbers And Characters (A/B/C/D/E/F) Only";
+				echo "<br>The Text Should Contains Numbers, Upper Case, And Characters (A/B/C/D/E/F) Only";
 				echo "<br>Example: ABBBC12345AAAAAB";
-				return false;
+				die(" Failed Input");
 			}
 				
 		}
 		if($check)
 			return true;
 		else
-			return false;
+            die(" Failed Input");
 	}
 
     function hex2binn($s){ 
